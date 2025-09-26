@@ -28,17 +28,27 @@ def merge_dicts(dicts):
 
 class TensorboardCallback(BaseCallback):
 
-    def __init__(self, log_dir, verbose=0):
+    def __init__(self, log_dir=None, verbose=0):
         super().__init__(verbose)
-        self.log_dir = log_dir
-        self.writer = None
 
     def _on_training_start(self):
-        if self.writer is None:
-            self.writer = SummaryWriter(log_dir=os.path.join(self.log_dir, 'histogram'))
+        pass
 
     def _on_step(self) -> bool:
         
+        # 매 100 step마다 각 환경별 누적 reward와 화면 로그
+        if self.n_calls % 100 == 0:
+            # 각 환경의 cumulative_reward 가져오기
+            all_cum_rewards = self.training_env.get_attr("cumulative_reward")
+            for i, cum_reward in enumerate(all_cum_rewards):
+                self.logger.record(f"debug/cumulative_reward_env{i}", cum_reward)
+            
+            # 각 환경의 recent_screens 가져와 Image로 로그
+            all_screens = self.training_env.get_attr("recent_screens")
+            for i, screens in enumerate(all_screens):
+                if screens is not None and screens.size > 0:
+                    self.logger.record(f"debug/screen_env{i}", Image(screens, "HWC"), exclude=("stdout", "log", "json", "csv"))
+
         if self.training_env.env_method("check_if_done", indices=[0])[0]:
             all_infos = self.training_env.get_attr("agent_stats")
             all_final_infos = [stats[-1] for stats in all_infos]
@@ -48,13 +58,10 @@ class TensorboardCallback(BaseCallback):
                 self.logger.record(f"env_stats/{key}", val)
 
             for key, distrib in distributions.items():
-                self.writer.add_histogram(f"env_stats_distribs/{key}", distrib, self.n_calls)
+                # self.writer.add_histogram 대신 self.logger.record 사용
+                self.logger.record(f"env_stats_distribs/{key}", distrib) # <--- 수정
                 self.logger.record(f"env_stats_max/{key}", max(distrib))
-                
-            #images = self.training_env.get_attr("recent_screens")
-            #images_row = rearrange(np.array(images), "(r f) h w c -> (r c h) (f w)", r=2)
-            #self.logger.record("trajectory/image", Image(images_row, "HW"), exclude=("stdout", "log", "json", "csv"))
-
+                        
             explore_map = np.array(self.training_env.get_attr("explore_map"))
             map_sum = reduce(explore_map, "f h w -> h w", "max")
             self.logger.record("trajectory/explore_sum", Image(map_sum, "HW"), exclude=("stdout", "log", "json", "csv"))
@@ -67,8 +74,3 @@ class TensorboardCallback(BaseCallback):
             self.logger.record("trajectory/all_flags", json.dumps(merged_flags))
 
         return True
-    
-    def _on_training_end(self):
-        if self.writer:
-            self.writer.close()
-

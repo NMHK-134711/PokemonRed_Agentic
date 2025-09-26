@@ -1,0 +1,116 @@
+  {
+  "goal": "Become the Kanto Pokémon League Champion by defeating the Elite Four and the Champion.",
+  "initial_state_summary": "Started with Squirtle, won the first rival battle, delivered Oak's Parcel, and just received the Pokédex from Professor Oak in Pallet Town.",
+  "tasks": [
+    {
+      "saga": "1. The Boulder Badge",
+      "objectives": [
+        "Go north to Viridian City and buy Poké Balls.",
+        "Head west from Viridian City to Route 22 for a rival battle.",
+        "Go north from Viridian City to enter Viridian Forest.",
+        "Navigate through Viridian Forest, catching a Caterpie and a Pidgey.",
+        "Exit Viridian Forest and arrive in Pewter City.",
+        "Challenge the Pewter City Gym and defeat Gym Leader Brock to earn the Boulder Badge."
+      ]
+    },
+    {
+      "saga": "2. The Cascade Badge",
+      "objectives": [
+        "Travel east from Pewter City through Route 3 to enter Mt. Moon.",
+        "Explore Mt. Moon, defeat Team Rocket members, and obtain one of the two fossils (Dome or Helix).",
+        "Exit Mt. Moon and travel through Route 4 to reach Cerulean City.",
+        "Go north to Route 24 (Nugget Bridge) and defeat five trainers and a final Team Rocket member.",
+        "On Route 25, help Bill at his Sea Cottage to receive the S.S. Ticket.",
+        "Challenge the Cerulean City Gym and defeat Gym Leader Misty to earn the Cascade Badge."
+      ]
+    },
+    {
+      "saga": "3. The Thunder Badge",
+      "objectives": [
+        "Go through the burgled house in Cerulean City to battle a Team Rocket grunt.",
+        "Travel south through Route 5 and enter the Underground Path to Route 6.",
+        "Arrive in Vermilion City.",
+        "Board the S.S. Anne using the S.S. Ticket, battle trainers and the rival.",
+        "Help the captain to obtain HM01 (Cut).",
+        "Teach Cut to a Pokémon.",
+        "Challenge the Vermilion City Gym by solving the switch puzzle and defeat Gym Leader Lt. Surge to earn the Thunder Badge."
+      ]
+    },
+    {
+      "saga": "4. The Rainbow Badge",
+      "objectives": [
+        "Travel east from Vermilion City to enter Diglett's Cave.",
+        "Navigate Diglett's Cave to reach the east side of Route 2.",
+        "Use Cut to access a house and obtain HM05 (Flash).",
+        "Return to Cerulean City and use Cut to access Route 9.",
+        "Travel through Route 9 and enter Rock Tunnel. Use Flash to navigate.",
+        "Exit Rock Tunnel and arrive in Lavender Town.",
+        "Go west from Lavender Town through Route 8 and enter the Underground Path to Route 7.",
+        "Arrive in Celadon City.",
+        "Challenge the Celadon City Gym and defeat Gym Leader Erika to earn the Rainbow Badge."
+      ]
+    },
+    {
+      "saga": "5. The Soul Badge",
+      "objectives": [
+        "Explore the Rocket Game Corner in Celadon City and find the secret hideout.",
+        "Navigate the Team Rocket Hideout, defeat grunts, and battle Giovanni.",
+        "Obtain the Silph Scope after defeating Giovanni.",
+        "Travel back to Lavender Town and enter the Pokémon Tower.",
+        "Use the Silph Scope to navigate the tower, defeat Team Rocket, and rescue Mr. Fuji.",
+        "Receive the Poké Flute from Mr. Fuji.",
+        "Go south from Lavender Town through the Snorlax-blocked Route 12 or west from Celadon City through the Snorlax-blocked Route 16.",
+        "Use the Poké Flute to wake up and defeat/capture Snorlax.",
+        "Travel through the route of choice (e.g., Cycling Road) to reach Fuchsia City.",
+        "Challenge the Fuchsia City Gym and defeat Gym Leader Koga to earn the Soul Badge."
+      ]
+    },
+    {
+      "saga": "6. The Marsh Badge",
+      "objectives": [
+        "Enter the Safari Zone in Fuchsia City.",
+        "Navigate the Safari Zone to find the Secret House and obtain HM03 (Surf).",
+        "Find the Warden's Gold Teeth in the Safari Zone and return them to him to receive HM04 (Strength).",
+        "Teach Surf and Strength to Pokémon.",
+        "Fly to Celadon City and travel to Saffron City (previously blocked).",
+        "Explore Saffron City, defeat Team Rocket at the Fighting Dojo to get a Hitmon- Pokémon.",
+        "Navigate the 11 floors of Silph Co., defeat the rival and Giovanni again.",
+        "Receive a Master Ball from the Silph Co. President.",
+        "Challenge the Saffron City Gym and defeat Gym Leader Sabrina to earn the Marsh Badge."
+      ]
+    },
+    {
+      "saga": "7. The Volcano Badge",
+      "objectives": [
+        "Fly to Pallet Town and Surf south to reach Cinnabar Island.",
+        "Explore the Pokémon Mansion on Cinnabar Island to find the Secret Key.",
+        "Use the Secret Key to enter the Cinnabar Island Gym.",
+        "Answer the quiz questions or battle the trainers to reach the Gym Leader.",
+        "Defeat Gym Leader Blaine to earn the Volcano Badge."
+      ]
+    },
+    {
+      "saga": "8. The Earth Badge",
+      "objectives": [
+        "After leaving the Cinnabar Gym, meet Bill who will take you to the Sevii Islands (optional but included for completeness). For now, we focus on the league.",
+        "Fly to Viridian City and challenge the final gym.",
+        "Navigate the Viridian City Gym's maze.",
+        "Defeat Gym Leader Giovanni for the final time to earn the Earth Badge."
+      ]
+    },
+    {
+      "saga": "9. The Pokémon League",
+      "objectives": [
+        "With all 8 badges, go west from Viridian City through Route 22 and Route 23 to reach Victory Road.",
+        "Navigate Victory Road using Strength to move boulders.",
+        "Emerge from Victory Road at the Indigo Plateau.",
+        "Heal and prepare your team with items for the final challenge.",
+        "Defeat Elite Four Lorelei (Ice/Water).",
+        "Defeat Elite Four Bruno (Fighting/Rock).",
+        "Defeat Elite Four Agatha (Ghost/Poison).",
+        "Defeat Elite Four Lance (Dragon).",
+        "Face and defeat the Champion, your rival, to become the Pokémon League Champion."
+      ]
+    }
+  ]
+}
