@@ -13,3 +13,4 @@ PokemonRed.gb.state
 venv*
 .python-version
 models
+logs

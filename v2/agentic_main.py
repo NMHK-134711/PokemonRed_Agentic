@@ -44,8 +44,8 @@ if __name__ == '__main__':
     ep_length = 2048 * 10
     
     env_config = {
-        'headless': False, 'save_final_state': False, 'early_stop': False,
-        'action_freq': 24, 'init_state': '../initial_red.state', 'max_steps': ep_length,
+        'headless': True, 'save_final_state': False, 'early_stop': False,
+        'action_freq': 24, 'init_state': '../has_pokedex.state', 'max_steps': ep_length,
         'print_rewards': True, 'save_video': False, 'fast_video': True, 
         'session_path': logs_path, # 비디오/스크린샷 등 세션 파일은 로그 폴더에 저장
         'gb_path': '../PokemonRed.gb', 'debug': False, 'reward_scale': 1.0, 'explore_weight': 0.0

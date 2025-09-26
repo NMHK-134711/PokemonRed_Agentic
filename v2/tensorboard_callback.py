@@ -43,6 +43,10 @@ class TensorboardCallback(BaseCallback):
             for i, cum_reward in enumerate(all_cum_rewards):
                 self.logger.record(f"debug/cumulative_reward_env{i}", cum_reward)
             
+            all_died_counts = self.training_env.get_attr("died_count")
+            for i, count in enumerate(all_died_counts):
+                self.logger.record(f"debug/death_count_env{i}", count)
+
             # 각 환경의 recent_screens 가져와 Image로 로그
             all_screens = self.training_env.get_attr("recent_screens")
             for i, screens in enumerate(all_screens):
