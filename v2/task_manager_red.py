@@ -56,6 +56,7 @@ class TaskManagerRed:
 
         # --- 각 Objective에 대한 상세한 완료 조건 ---
         # Saga 1
+        if "Go north to Viridian City" in objective: return self._is_in_location("VIRIDIAN CITY")
         if "buy Poké Balls" in objective: return self._has_item("POKé BALL")
         if "rival battle" in objective and "Route 22" in objective: return self._is_in_location("VIRIDIAN FOREST")
         if "enter Viridian Forest" in objective: return self._is_in_location("VIRIDIAN FOREST")

@@ -162,9 +162,11 @@ GENERAL_SKILLS = [
 ]
 
 # 최종 스킬 리스트는 모든 스킬을 통합하여 중복 제거
-unique_skills = set(
+unique_skills_list = set(
     SAGA_1_SKILLS + SAGA_2_SKILLS + SAGA_3_SKILLS + SAGA_4_SKILLS + 
     SAGA_5_SKILLS + SAGA_6_SKILLS + SAGA_7_SKILLS + SAGA_8_SKILLS + 
-    SAGA_9_SKILLS + GENERAL_SKILLS
+    SAGA_9_SKILLS + GENERAL_SKILLS 
 )
-AVAILABLE_SKILLS_RED = sorted(list(unique_skills), key=lambda x: x.description)
+
+unique_skills_dict = {skill.description: skill for skill in unique_skills_list}
+AVAILABLE_SKILLS_RED = sorted(list(unique_skills_dict.values()), key=lambda x: x.description)
