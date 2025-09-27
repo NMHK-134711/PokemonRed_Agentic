@@ -115,6 +115,7 @@ class RedGymEnv(Env):
             #debugging=False,
             #disable_input=False,
             window=head,
+            sound=False,
         )
 
         #self.screen = self.pyboy.botsupport_manager().screen()
@@ -610,6 +611,19 @@ class RedGymEnvAgentic(RedGymEnv):
                 
         return obs, info
 
+    def save_current_state(self, path):
+        """현재 에뮬레이터 상태를 지정된 경로에 파일로 저장합니다."""
+        with open(path, "wb") as f:
+            self.pyboy.save_state(f)
+
+    def get_cumulative_reward(self):
+        """현재 누적 보상 값을 반환합니다."""
+        return self.cumulative_reward
+
+    def set_cumulative_reward(self, reward):
+        """이전 환경에서 계산된 누적 보상 값을 현재 환경에 설정합니다."""
+        self.cumulative_reward = reward
+
     def reset_and_load_state(self, state_bytes):
         """
         [최종 해결책]
@@ -713,9 +727,9 @@ class RedGymEnvAgentic(RedGymEnv):
         num_badges = len(reader.read_badges())
         event_count = self.get_all_events_reward()
         total_level = sum(p.level for p in party_pokemon)
-        total_hp = sum(p.current_hp for p in party_pokemon)
+        #total_hp = sum(p.current_hp for p in party_pokemon)
 
         # 마지막 우선순위 기준으로 누적 보상을 추가합니다.
         cumulative_reward = self.cumulative_reward
 
-        return (num_badges, event_count, total_level, total_hp, cumulative_reward)
+        return (num_badges, event_count, total_level, cumulative_reward)

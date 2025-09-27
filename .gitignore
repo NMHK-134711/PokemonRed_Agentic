@@ -14,3 +14,4 @@ venv*
 .python-version
 models
 logs
+*.gguf

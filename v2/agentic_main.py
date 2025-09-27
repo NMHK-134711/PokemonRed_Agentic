@@ -1,9 +1,10 @@
 # agentic_main.py
 import time
+import os
 import numpy as np
 from pathlib import Path
 from sb3_contrib import RecurrentPPO
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecTransposeImage
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.logger import configure as configure_logger
 
@@ -15,7 +16,11 @@ from tensorboard_callback import TensorboardCallback
 from custom_policy import CombinedExtractor
 
 # --- 환경 생성 함수 ---
-def make_env(rank, env_conf, seed=0):
+def make_env(rank, env_conf, seed=0, custom_init_state=None):
+    # custom_init_state가 제공되면, env_conf의 기본값을 덮어씁니다.
+    if custom_init_state:
+        env_conf['init_state'] = custom_init_state
+    
     def _init():
         env = RedGymEnvAgentic(env_conf)
         env.reset(seed=(seed + rank))
@@ -42,13 +47,25 @@ if __name__ == '__main__':
     # --- 환경 및 Agentic 구성 요소 초기화 ---
     num_cpu = 8  # 병렬 환경 수
     ep_length = 2048 * 10
+
+    gb_path = os.path.abspath('../PokemonRed.gb')
+    init_state_path = os.path.abspath('../has_pokedex.state') # 또는 initial_red.state
     
     env_config = {
-        'headless': True, 'save_final_state': False, 'early_stop': False,
-        'action_freq': 24, 'init_state': '../has_pokedex.state', 'max_steps': ep_length,
-        'print_rewards': True, 'save_video': False, 'fast_video': True, 
-        'session_path': logs_path, # 비디오/스크린샷 등 세션 파일은 로그 폴더에 저장
-        'gb_path': '../PokemonRed.gb', 'debug': False, 'reward_scale': 1.0, 'explore_weight': 0.0
+        'headless': True, 
+        'save_final_state': False, 
+        'early_stop': False,
+        'action_freq': 24, 
+        'init_state': '../initial_red.state', 
+        'max_steps': ep_length,
+        'print_rewards': True, 
+        'save_video': False, 
+        'fast_video': True, 
+        'session_path': logs_path,
+        'gb_path': '../PokemonRed.gb', 
+        'debug': False, 
+        'reward_scale': 1.0, 
+        'explore_weight': 0.2
     }
     
     env = SubprocVecEnv([make_env(i, env_config) for i in range(num_cpu)])
@@ -129,22 +146,63 @@ if __name__ == '__main__':
         if is_all_same:
             print("모든 에이전트의 상태가 동일하여 복제를 건너뜁니다.")
         else:
-            # 4. 최고 에이전트의 상태를 가져와 절반의 환경에 복제
             print(f"에이전트 {best_agent_idx}의 상태를 복제합니다...")
-            best_agent_state = env.env_method('get_pyboy_state', indices=[best_agent_idx])[0]
-
-            half_point = num_cpu // 2
-            target_indices = []
-            if best_agent_idx < half_point:
-                target_indices = list(range(0, half_point))
-            else:
-                target_indices = list(range(half_point, num_cpu))
             
-            for idx in target_indices:
-                if idx != best_agent_idx:
-                    # 기존 함수 대신 새로운 '안전한' 함수를 호출합니다.
-                    env.env_method('reset_and_load_state', best_agent_state, indices=[idx]) # <--- 이 부분을 수정!
-            print(f"환경 그룹 {target_indices}에 복제 완료.")
+            # --- 새로운 환경 교체 로직 ---
+            
+            # 1. 교체 전, 모든 에이전트의 현재 상태와 누적 보상을 임시 저장합니다.
+            print("모든 에이전트의 현재 상태와 누적 보상을 임시 저장합니다...")
+            
+            temp_state_files = []
+            saved_rewards = env.env_method('get_cumulative_reward') # 이 함수를 위해 env에 get_cumulative_reward 추가 필요
+            
+            for i in range(num_cpu):
+                path = (logs_path / f"temp_agent_{i}.state").resolve()
+                env.env_method('save_current_state', str(path), indices=[i])
+                temp_state_files.append(str(path))
+
+            best_agent_state_path = temp_state_files[best_agent_idx]
+
+            # 2. 기존의 모든 환경 프로세스를 완전히 종료합니다.
+            print("기존 환경을 모두 종료합니다...")
+            env.close()
+
+            # 3. 새로운 환경에 주입할 초기 상태 경로 리스트를 준비합니다.
+            half_point = num_cpu // 2
+            init_state_paths = [None] * num_cpu
+            target_group_is_first_half = best_agent_idx < half_point
+            
+            for i in range(num_cpu):
+                # 최고 에이전트 그룹은 최고 상태로, 나머지는 각자의 이전 상태로 초기화
+                if (target_group_is_first_half and i < half_point) or \
+                   (not target_group_is_first_half and i >= half_point):
+                    init_state_paths[i] = best_agent_state_path
+                else:
+                    init_state_paths[i] = temp_state_files[i]
+
+            # 4. 새로운 환경 벡터를 생성합니다.
+            print("새로운 환경을 생성합니다...")
+            unwrapped_env = SubprocVecEnv([make_env(i, env_config, custom_init_state=init_state_paths[i]) for i in range(num_cpu)])
+            env = VecTransposeImage(unwrapped_env)
+            
+            # 5. 새로 생성된 환경에 이전의 누적 보상을 다시 설정합니다.
+            print("누적 보상을 복원합니다...")
+            for i in range(num_cpu):
+                env.env_method('set_cumulative_reward', saved_rewards[i], indices=[i])
+            
+            # 6. PPO 모델에 새로운 환경을 연결합니다.
+            model.set_env(env)
+
+            model._last_obs = env.reset()
+            
+            # 7. 사용했던 임시 상태 파일들을 모두 삭제합니다.
+            for path_str in temp_state_files:
+                p = Path(path_str)
+                if p.exists():
+                    p.unlink()
+
+            print("환경 교체가 완료되었습니다.")
+            
 
         # --- 1. 태스크 진행 여부 확인 및 목표 설정 ---
         all_game_states = env.env_method('get_structured_state')

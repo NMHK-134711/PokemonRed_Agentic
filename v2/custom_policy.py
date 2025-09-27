@@ -27,7 +27,6 @@ class NatureCNN(BaseFeaturesExtractor):
         self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
-        # 입력 텐서의 차원을 (배치, 채널, 높이, 너비) 순서로 변경합니다.
         return self.linear(self.cnn(observations))
 
 class CombinedExtractor(BaseFeaturesExtractor):
