@@ -418,12 +418,41 @@ class RedGymEnvAgentic(RedGymEnv):
         self.task_manager.sync_with_initial_state(self.prev_state)
         self.cumulative_reward = 0.0
         return obs, info
-
-    def check_and_advance_task(self):
-        """[신규] 자신의 상태를 기준으로 목표 달성 여부를 확인하고 다음으로 진행"""
+    
+    def run_agentic_update(self) -> tuple[dict, str]:
+        """
+        메인 프로세스와의 통신을 최소화하기 위해 에이전트 업데이트의 핵심 로직을 통합합니다.
+        1. 자신의 목표 달성 여부를 확인하고 필요시 다음 목표로 업데이트합니다.
+        2. LLM이 사용할 현재 게임 상태(state)를 가져옵니다.
+        3. LLM이 사용할 현재 목표 설명(task description)을 가져옵니다.
+        4. 위 두 정보를 튜플로 묶어 한 번에 반환합니다.
+        """
+        # 1. 목표 확인 및 갱신
+        self._check_and_advance_task()
+        
+        # 2. 현재 상태 가져오기
+        current_state = self.get_structured_state()
+        
+        # 3. 현재 목표 설명 가져오기
+        task_description = self.get_task_description()
+        
+        # 4. 필수 정보만 묶어서 반환
+        return (current_state, task_description)
+    
+    def _check_and_advance_task(self):
+        """자신의 상태를 기준으로 목표 달성 여부를 확인하고 다음으로 진행"""
         current_state = self.get_structured_state()
         if self.task_manager.is_current_task_completed(current_state):
+            # advance_to_next_task는 내부적으로 print문을 포함하고 있음
             self.task_manager.advance_to_next_task()
+
+    def get_task_description(self) -> str:
+        """자신의 현재 목표 설명을 반환"""
+        return self.task_manager.get_current_task_description()
+    
+    def get_structured_state(self) -> dict:
+        """현재 게임 상태를 구조화된 딕셔너리로 반환"""
+        return get_game_state(self.pyboy)
 
     def get_task_description(self) -> str:
         """[신규] 자신의 현재 목표 설명을 반환"""
@@ -441,26 +470,29 @@ class RedGymEnvAgentic(RedGymEnv):
 
     def set_current_skill(self, skill):
         if skill is not None:
-            print(f"환경 {self.instance_id}: 새로운 목표 스킬 설정 -> {skill.description}")
+            # print(f"환경 {self.instance_id}: 새로운 목표 스킬 설정 -> {skill.description}")
             self.current_skill = skill
 
     def get_structured_state(self):
         return get_game_state(self.pyboy)
 
     def step(self, action):
-        # 행동을 먼저 실행하여 게임 상태를 최신으로 만듭니다.
         obs, original_reward, terminated, truncated, info = super().step(action)
-        
-        # 행동이 완료된 후, 최신 상태를 읽어옵니다.
         structured_state = self.get_structured_state()
-        
-        # 이제 최신 상태(structured_state)와 직전 상태(self.prev_state)를 비교하여 보상을 계산합니다.
         skill_reward = self.current_skill.get_reward(self.prev_state, structured_state)
         
-        total_reward = original_reward + skill_reward * self.reward_scale
+        health_penalty = 0.0
+        party_pokemon = structured_state.get('party_info', {}).get('pokemon', [])
+        
+        # 파티의 포켓몬 중 하나라도 체력이 50% 미만이면 패널티를 부과합니다.
+        for pokemon in party_pokemon:
+            if pokemon.get('hp_percent', 1.0) < 0.5:
+                health_penalty = -0.01  # 패널티 값 (실험을 통해 조절 가능)
+                break # 한 마리라도 낮으면 패널티를 주고 루프 중단
+
+        total_reward = original_reward + skill_reward * self.reward_scale + health_penalty
         self.cumulative_reward += total_reward
         
-        # 다음 스텝을 위해 현재 상태를 이전 상태로 업데이트합니다.
         self.prev_state = structured_state
         
         info['original_reward'] = original_reward

@@ -69,11 +69,21 @@ def get_game_state(pyboy) -> dict:
 
     # --- 3. 파티 정보 ---
     party_data = reader.read_party_pokemon()
-    party_pokemon = [
-        {"species_name": p.species_name, "level": p.level} for p in party_data
-    ]
-    party_info = {"count": len(party_pokemon), "pokemon": party_pokemon}
+    party_pokemon_list = []
+    for p in party_data:
+        # 최대 HP가 0인 경우 0으로 나누는 것을 방지
+        hp_percent = (p.current_hp / p.max_hp) if p.max_hp > 0 else 0.0
+        
+        party_pokemon_list.append({
+            "species_name": p.species_name,
+            "level": p.level,
+            "hp_percent": round(hp_percent, 2) # 소수점 2자리까지 반올림
+        })
 
+    party_info = {
+        "count": len(party_pokemon_list), 
+        "pokemon": party_pokemon_list # 이제 각 포켓몬은 hp_percent를 가집니다.
+    }
     # --- 4. 아이템 정보 ---
     inventory = {"items": reader.read_items()}
 

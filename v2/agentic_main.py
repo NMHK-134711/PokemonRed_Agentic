@@ -104,25 +104,24 @@ if __name__ == '__main__':
     segment_count = 0
     steps_per_segment = model.n_steps * num_cpu 
 
-    # [제거] 초기 상태 동기화는 각 환경이 reset에서 스스로 수행하므로 필요 없음
-
     while total_steps < 10_000_000:
         segment_count += 1
         print(f"\n{'='*20} 세그먼트 {segment_count} 시작 {'='*20}")
 
-        # 1. 각 환경이 스스로 목표를 갱신하도록 명령
-        env.env_method('check_and_advance_task')
+        # --- [변경] 단 한 번의 IPC 호출로 모든 에이전트 정보 수집 ---
+        # 각 환경은 내부적으로 목표를 갱신하고, 필요한 데이터를 한 번에 반환합니다.
+        agentic_data_list = env.env_method('run_agentic_update')
         
-        # 2. 각 환경으로부터 '개별 목표'와 '게임 상태'를 모두 가져옴
-        all_game_states = env.env_method('get_structured_state')
-        all_task_descriptions = env.env_method('get_task_description')
+        # 반환된 데이터 (state, task_desc 튜플의 리스트)를 분리합니다.
+        all_game_states = [data[0] for data in agentic_data_list]
+        all_task_descriptions = [data[1] for data in agentic_data_list]
 
+        # --- 이후 로직은 동일 ---
         print("--- 각 에이전트의 현재 목표 ---")
         for i, desc in enumerate(all_task_descriptions):
-            print(f"  - 에이전트 {i}: {desc.splitlines()[1]}") # 구체적인 목표만 출력
+            print(f"  - 에이전트 {i}: {desc.splitlines()[1]}")
         print("-----------------------------")
         
-        # 3. LLM에 모든 정보를 전달하여 개별 스킬들을 결정
         print("LLM 플래너를 호출하여 각 에이전트의 다음 목표 스킬을 결정합니다...")
         chosen_skills = llm_planner.choose_next_skill_batch(
             all_game_states, 
@@ -130,11 +129,9 @@ if __name__ == '__main__':
             AVAILABLE_SKILLS_RED
         )
         
-        # 4. 결정된 개별 스킬을 각 환경에 설정
         for i, skill in enumerate(chosen_skills):
             env.env_method('set_current_skill', skill, indices=[i])
 
-        # 5. 저수준 액터 학습 수행
         print(f"저수준 PPO 액터가 {steps_per_segment} 스텝 동안 목표 스킬을 수행하며 학습합니다...")
         model.learn(
             total_timesteps=steps_per_segment, 
@@ -143,6 +140,8 @@ if __name__ == '__main__':
         )
         
         total_steps += steps_per_segment
+
+    print("학습이 완료되었습니다.")
 
     print("학습이 완료되었습니다.")
     print("최종 평가를 진행하여 최고 환경의 상태를 저장합니다...")
